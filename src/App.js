@@ -1,12 +1,21 @@
 import { useState } from "react";
 
 import { db } from "./firebaseConnection";
-import { doc, setDoc, collection, addDoc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  collection,
+  addDoc,
+  getDoc,
+  getDocs,
+} from "firebase/firestore";
 import "./app.css";
 
 function App() {
   const [titulo, setTitulo] = useState("");
   const [autor, setAutor] = useState("");
+
+  const [posts, setPosts] = useState([]);
 
   async function handleAdd() {
     // await setDoc(doc(db, "posts", "12345"), {
@@ -20,7 +29,7 @@ function App() {
     //     console.log("GEROU ERRO" + error);
     //   });
 
-    await addDoc(collection(db, "posts"), {
+    await addDoc(collection(db, "post"), {
       titulo: titulo,
       autor: autor,
     })
@@ -35,12 +44,31 @@ function App() {
   }
 
   async function buscarPost() {
-    const postRef = doc(db, "posts", "NaK2rBuv1rCiZv0yvLIo");
+    //   const postRef = doc(db, "posts", "NaK2rBuv1rCiZv0yvLIo");
+    //   await getDoc(postRef).then((snapshot) => {
+    //     setAutor(snapshot.data().autor);
+    //     setTitulo(snapshot.data().titulo);
+    //   });
+    //
 
-    await getDoc(postRef).then((snapshot) => {
-      setAutor(snapshot.data().autor);
-      setTitulo(snapshot.data().titulo);
-    });
+    const postsRef = collection(db, "post");
+    await getDocs(postsRef)
+      .then((snapshot) => {
+        let lista = [];
+
+        snapshot.forEach((doc) => {
+          lista.push({
+            id: doc.id,
+            titulo: doc.data().titulo,
+            autor: doc.data().autor,
+          });
+        });
+
+        setPosts(lista);
+      })
+      .catch((error) => {
+        console.log("Deu algum erro na busca");
+      });
   }
 
   return (
@@ -65,6 +93,17 @@ function App() {
 
         <button onClick={handleAdd}>Cadastrar</button>
         <button onClick={buscarPost}>Buscar post</button>
+
+        <ul>
+          {posts.map((post) => {
+            return (
+              <li key={post.id}>
+                <span>Titulo: {post.titulo}</span> <br />
+                <span>Autor: {post.autor}</span> <br /> <br />
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );
