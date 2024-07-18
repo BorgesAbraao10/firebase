@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { db } from "./firebaseConnection";
+import { db, auth } from "./firebaseConnection";
 import {
   doc,
   setDoc,
@@ -14,10 +14,15 @@ import {
 } from "firebase/firestore";
 import "./app.css";
 
+import { createUserWithEmailAndPassword } from "firebase/auth";
+
 function App() {
   const [titulo, setTitulo] = useState("");
   const [autor, setAutor] = useState("");
   const [idPost, setIdPost] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
@@ -117,10 +122,48 @@ function App() {
     });
   }
 
+  async function novoUsuario() {
+    await createUserWithEmailAndPassword(auth, email, senha)
+      .then((value) => {
+        console.log("CADASTRADO COM SUCESSO!!");
+
+        setEmail("");
+        setSenha("");
+      })
+      .catch((error) => {
+        if (error.code === "auth/weak-password") {
+          alert("Senha muito fraca");
+        } else if (error.code === "auth/email-already-in-use") {
+          alert("Email já existe!");
+        }
+      });
+  }
+
   return (
     <div>
       <h1>React JS + Firebase :) </h1>
       <div className="container">
+        <h2>Usuarios</h2>
+        <label>Email</label>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Digite um e-mail"
+        />{" "}
+        <br></br>
+        <label>Senha</label>
+        <input
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          placeholder="Informe sua senha"
+        />
+        <br />
+        <button onClick={novoUsuario}>Cadastrar</button>
+      </div>
+      <br />
+
+      <div className="container">
+        <h2>POSTS</h2>
         <label>ID do Post:</label>
         <input
           placeholder="Digite o ID do post"
@@ -142,7 +185,8 @@ function App() {
           value={autor}
           onChange={(e) => setAutor(e.target.value)}
         />
-        <button onClick={handleAdd}>Cadastrar</button>
+        <br />
+        <button onClick={handleAdd}>Cadastrar</button> <br />
         <button onClick={buscarPost}>Buscar post</button> <br />
         <button onClick={editarPost}>Atualizar post</button>
         <ul>
